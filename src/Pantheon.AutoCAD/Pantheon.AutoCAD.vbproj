@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- AutoCAD 2027 loads .NET 10 add-ins (Autodesk AutoCAD 2027 SDK notes). -->
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Pantheon.AutoCAD</RootNamespace>
+    <AssemblyName>Pantheon</AssemblyName>
+    <MyType>Empty</MyType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- AutoCAD supplies these assemblies at run time; compile against them only. -->
+    <PackageReference Include="AutoCAD.NET" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pantheon.Core\Pantheon.Core.vbproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\*.bmp;Icons\*.png" LogicalName="Pantheon.Icons.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

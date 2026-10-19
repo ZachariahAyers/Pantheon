@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Pantheon.Core/Pantheon.Core.vbproj" />
+    <Project Path="src/Pantheon.AutoCAD/Pantheon.AutoCAD.vbproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Pantheon.Core.Tests/Pantheon.Core.Tests.vbproj" />
+  </Folder>
+</Solution>
