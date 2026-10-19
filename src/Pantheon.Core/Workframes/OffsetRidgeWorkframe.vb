@@ -48,8 +48,8 @@ Namespace Workframes
             builder.AddFrames(nearProfile, FramesWithin(sidewallLines, NearSide.Length))
             builder.AddFrames(farProfile, FramesWithin(sidewallLines, FarSide.Length))
 
-            Dim numbered = sidewallLines.Concat({NearSide.Length, FarSide.Length}).
-                Select(Function(x) Math.Round(x, 6)).Distinct().OrderBy(Function(x) x).ToList()
+            Dim ends = {NearSide.Length, FarSide.Length}
+            Dim numbered = sidewallLines.Concat(ends).Select(Function(position) Math.Round(position, 6)).Distinct().OrderBy(Function(position) position).ToList()
             For i = 0 To numbered.Count - 1
                 Dim x = numbered(i)
                 builder.AddNumberedLine(i + 1, x, If(x <= NearSide.Length + GridLayout.Tolerance, 0, ridge), width)

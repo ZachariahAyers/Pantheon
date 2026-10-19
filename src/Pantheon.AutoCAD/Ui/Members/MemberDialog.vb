@@ -36,7 +36,6 @@ Namespace Ui.Members
             MinimizeBox = False
             ShowInTaskbar = False
             StartPosition = FormStartPosition.CenterParent
-            AutoScaleMode = WinForms.AutoScaleMode.Dpi
             AutoSize = True
             AutoSizeMode = WinForms.AutoSizeMode.GrowAndShrink
 
