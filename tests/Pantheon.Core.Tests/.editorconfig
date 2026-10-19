@@ -1,0 +1,7 @@
+[*.vb]
+# Expected values read best as inline array literals in tests.
+dotnet_diagnostic.CA1861.severity = none
+# xUnit runs instance test methods; they need not be Shared.
+dotnet_diagnostic.CA1822.severity = none
+# Test helpers favour readable signatures over interface-call speed.
+dotnet_diagnostic.CA1859.severity = none
