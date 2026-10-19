@@ -2,7 +2,7 @@
 
 ## v2.0.0 - 2026-10-19
 
-A rebuild for current AutoCAD. Same purpose and the same members; no new features.
+Built for current AutoCAD.
 
 ### Changed
 
@@ -11,7 +11,7 @@ A rebuild for current AutoCAD. Same purpose and the same members; no new feature
 - The dialogs use standard WinForms. The Telerik 2014 controls are gone, so the add-in builds without a paid licence.
 - One Pantheon ribbon tab holds the commands that draw something.
 - Dialogs are modal and the member is drawn after the dialog closes.
-- Entities take the colour indexes the code asked for (ACI 20 footprint, 3 frames and grid, 2 offsets). v1 passed `ColorMethod.ByLayer`, which takes the layer's colour. Members go on their layer without changing the current layer.
+- Entities take the colour indexes the code asked for (ACI 20 footprint, 3 frames and grid, 2 offsets). Members go on their layer without changing the current layer.
 - Shapes and members follow the current UCS, so the Pitch palette and the shape commands work together.
 - Option Strict is on and the .NET recommended analyzers fail the build on any warning.
 - CI builds and tests on every push to master; Dependabot checks dependencies monthly.
@@ -38,7 +38,3 @@ A rebuild for current AutoCAD. Same purpose and the same members; no new feature
 - `WALL` and the column types other than straight, which opened a form or prompt and drew nothing.
 - The `Gauge` prompt option and the column's eave and pitch prompts, which never changed the drawing.
 - The unused W-shape table, template files, editor leftovers and images nothing loaded.
-
-## v1 - 2015
-
-The original add-in, built at Cowell Steel Structures from 2013 to 2015: VB.NET on .NET Framework 4.0, ObjectARX references and Telerik WinForms controls. Imported to git in 2020 and tagged `v1`.

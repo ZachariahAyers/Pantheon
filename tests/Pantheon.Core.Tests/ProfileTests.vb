@@ -4,7 +4,7 @@ Imports Xunit
 
 Public NotInheritable Class ProfileTests
 
-    ' Vertices worked from the v1 drawing code for an 8 inch web and 3.5 inch flange about the origin.
+    ' Vertices worked by hand for an 8 inch web and 3.5 inch flange about the origin.
     Private Shared ReadOnly CeeFlangesUp As Point2() = {
         P(-3, 3.5), P(-4, 3.5), P(-4, 0), P(4, 0), P(4, 3.5), P(3, 3.5),
         P(3, 3.25), P(3.75, 3.25), P(3.75, 0.25), P(-3.75, 0.25), P(-3.75, 3.25), P(-3, 3.25)}
@@ -64,7 +64,6 @@ Public NotInheritable Class ProfileTests
 
     <Fact>
     Public Sub FlatRightPurlinFacesRight()
-        ' The original drew this case with the left-hand shape.
         Dim expected = {P(3.1875, -7.3125), P(2.5, -8), P(0, -8), P(0, 0), P(-2.5, 0), P(-3.1875, -0.6875)}
         SamePoints(expected, ZeeProfile.Outline(ZeeMember.Purlin, Hand.Right, 8, 2.5, 0).Points)
     End Sub

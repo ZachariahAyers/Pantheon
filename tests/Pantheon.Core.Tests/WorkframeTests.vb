@@ -82,7 +82,7 @@ Public NotInheritable Class WorkframeTests
 
     <Fact>
     Public Sub SingleSlopeBypassDropsTheHighEndBelowTheRoof()
-        ' The original added the girt rise at the high eave too, which put the line above the roof.
+        ' The girt rise is not added at the high eave, so the line stays below the roof.
         Dim pitch = 30.0 / 360
         Dim drop = 8 * Math.Sqrt(1 + pitch * pitch)
         Dim building = New SingleSlopeWorkframe(360, 600, 144, 174, New Framing(8, 8, GirtAttachment.Bypass), BayLayout.None)

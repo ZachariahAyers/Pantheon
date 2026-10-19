@@ -61,6 +61,6 @@ The member types, their fields and their defaults are all in `Ui/Members/MemberC
 
 ## Tests
 
-`tests/Pantheon.Core.Tests` uses xUnit v3. Expected vertices are worked by hand from the v1 drawing code or from closed forms, never produced by the code under test. Tests that pin a v1 bug fix say so in a comment.
+`tests/Pantheon.Core.Tests` uses xUnit v3. Expected vertices are worked by hand or from closed forms, never produced by the code under test.
 
 CI builds the whole solution and runs these tests on a Windows runner. The add-in compiles there against Autodesk's reference assemblies, but nothing can run inside AutoCAD on a runner; drawing behaviour is checked by loading the add-in in AutoCAD 2027.
