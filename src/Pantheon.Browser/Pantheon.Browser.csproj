@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <WasmEnableHotReload>false</WasmEnableHotReload>
+    <WasmBuildNative>false</WasmBuildNative>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pantheon.Core\Pantheon.Core.vbproj" />
+    <ProjectReference Include="..\Pantheon.Demo\Pantheon.Demo.csproj" />
+  </ItemGroup>
+
+</Project>

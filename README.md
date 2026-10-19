@@ -4,6 +4,8 @@
 
 An AutoCAD add-in that lets steel building drafters draw framing members straight from the engineer's numbers.
 
+[Try the workframe geometry in your browser](https://ayers.repair/opensource/pantheon/). The demo runs the real Pantheon.Core .NET library in WebAssembly and produces no drawing file.
+
 ## Features
 
 - Draws a building's 3D workframe (gable, single slope or off-center ridge) with frame lines, purlin and girt offsets, and grid bubbles.

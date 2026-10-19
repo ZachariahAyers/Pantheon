@@ -2,6 +2,7 @@
 bin/
 obj/
 artifacts/
+demo-dist/
 TestResults/
 *.binlog
 

@@ -18,3 +18,4 @@ AutoCAD 2027 add-in in VB.NET that draws metal building framing (workframes, sla
 - The palette opens with `PANTHEONPALETTE`.
 - Option Strict is on and the .NET recommended analyzers fail the build on any warning.
 - CI builds and tests on every push to master; Dependabot checks dependencies monthly.
+- A browser drawing desk runs the real `Pantheon.Core` workframe geometry through a small .NET WebAssembly adapter and renders its returned line endpoints at `/opensource/pantheon/`.

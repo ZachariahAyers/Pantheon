@@ -1,6 +1,6 @@
 # Architecture
 
-Pantheon is two libraries and a test project.
+Pantheon is an AutoCAD add-in around a platform-neutral geometry library. A browser adapter also uses that library for the public workframe demo.
 
 ```
 Pantheon.AutoCAD  ->  Pantheon.Core
@@ -9,6 +9,11 @@ Pantheon.AutoCAD  ->  Pantheon.Core
   AutoCAD 2027 .NET API (AutoCAD.NET package, compile only)
 
 Pantheon.Core.Tests  ->  Pantheon.Core
+
+Pantheon.Browser  ->  Pantheon.Demo  ->  Pantheon.Core
+                         ^
+                         |
+                 Pantheon.Demo.Tests
 ```
 
 ## Pantheon.Core
@@ -24,6 +29,12 @@ Every calculation that decides where a line goes. It targets `net10.0` and refer
 | `Members` | `Slab`, `BasePlate`, `AnchorRods` |
 
 Models validate in their constructors and throw `ArgumentException` (or `FormatException` for bay text) with a message a drafter can act on. The add-in shows that message as it is.
+
+## Browser demo
+
+`Pantheon.Browser` is a .NET WebAssembly executable with static files under `wwwroot`. Its single C# `JSExport` accepts a JSON request and passes it to `Pantheon.Demo`. The adapter constructs a real `SymmetricalWorkframe`, calls `Build`, and returns the resulting model-space line endpoints with calculated dimensions. JavaScript only projects those 3D endpoints into the SVG view.
+
+The public desk deliberately supports one bounded case: a symmetrical gable frame with equal-length bays. It does not write a DWG or stand in for the AutoCAD commands. The generated site is published under `/opensource/pantheon/` after the repository's build and test job passes.
 
 ### Coordinates
 
@@ -61,6 +72,6 @@ The member types, their fields and their defaults are all in `Ui/Members/MemberC
 
 ## Tests
 
-`tests/Pantheon.Core.Tests` uses xUnit v3. Expected vertices are worked by hand or from closed forms, never produced by the code under test.
+`tests/Pantheon.Core.Tests` uses xUnit v3. Expected vertices are worked by hand or from closed forms, never produced by the code under test. `tests/Pantheon.Demo.Tests` proves the browser adapter returns those Core endpoints and refuses input outside the demo's stated range.
 
 CI builds the whole solution and runs these tests on a Windows runner. The add-in compiles there against Autodesk's reference assemblies, but nothing can run inside AutoCAD on a runner; drawing behaviour is checked by loading the add-in in AutoCAD 2027.
