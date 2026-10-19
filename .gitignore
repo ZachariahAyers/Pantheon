@@ -1,29 +1,21 @@
-Thumbs.db
-*.obj
-*.exe
-*.pdb
-*.user
-*.aps
-*.pch
-*.vspscc
-*_i.c
-*_p.c
-*.ncb
-*.suo
-*.sln.docstates
-*.tlb
-*.tlh
-*.bak
-*.cache
-*.ilk
-*.log
-[Bb]in
-[Dd]ebug*/
-*.lib
-*.sbr
+# Build output
+bin/
 obj/
-[Rr]elease*/
-_ReSharper*/
-[Tt]est[Rr]esult*
-*.vssscc
-$tf*/
+artifacts/
+TestResults/
+*.binlog
+
+# IDE state
+.vs/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+# Per-developer Claude Code files
+.claude/settings.local.json
+CLAUDE.local.md
+
+# OS
+Thumbs.db
+.DS_Store

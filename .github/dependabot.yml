@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      test-tools:
+        patterns:
+          - "Microsoft.NET.Test.Sdk"
+          - "xunit*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
