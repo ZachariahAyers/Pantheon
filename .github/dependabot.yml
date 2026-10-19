@@ -2,8 +2,15 @@ version: 2
 updates:
   - package-ecosystem: nuget
     directory: /
+    commit-message:
+      prefix: "build"
+      include: "scope"
     schedule:
       interval: monthly
+    ignore:
+      # A new AutoCAD.NET major targets a new AutoCAD release; move to it on purpose.
+      - dependency-name: "AutoCAD.NET*"
+        update-types: ["version-update:semver-major"]
     groups:
       test-tools:
         patterns:
@@ -12,5 +19,8 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    commit-message:
+      prefix: "build"
+      include: "scope"
     schedule:
       interval: monthly
