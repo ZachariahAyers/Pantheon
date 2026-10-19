@@ -22,6 +22,9 @@ jobs:
       - name: Restore
         run: dotnet restore Pantheon.slnx
 
+      - name: Check formatting
+        run: dotnet format Pantheon.slnx --verify-no-changes --no-restore
+
       - name: Build
         run: dotnet build Pantheon.slnx --configuration Release --no-restore
 
