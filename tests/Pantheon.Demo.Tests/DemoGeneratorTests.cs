@@ -6,28 +6,26 @@ namespace Pantheon.Demo.Tests;
 
 public sealed class DemoGeneratorTests
 {
-    private static readonly DemoRequest Gable = new("gable", 60, 120, 18, 4, 4);
+    private static readonly WorkframeDialog Symmetrical =
+        new("symmetrical", Width: "60'", Eave: "18'", Length: "120'", Pitch: "4", SideBays: "4*30'");
 
     [Fact]
-    public void GableReadsTheRidgeAndRafterFromTheSpanAndPitch()
+    public void SymmetricalDialogBuildsTheGableTheAddInWould()
     {
-        var response = Generate(Gable);
+        var response = Generate(Symmetrical);
 
         Assert.True(response.Ok);
-        Assert.Null(response.Error);
-        Assert.Equal("inches", response.Unit);
         // Ridge: 18 ft + 30 ft x 4/12 = 28 ft. Rafter: hypotenuse of 360 in by 120 in = 379.47 in.
         Assert.Equal(
             [
-                new DemoReadout("Span", "60′ 0″"),
+                new DemoReadout("Width", "60′ 0″"),
                 new DemoReadout("Length", "120′ 0″"),
                 new DemoReadout("Eave", "18′ 0″"),
                 new DemoReadout("Ridge", "28′ 0″"),
-                new DemoReadout("Roof slope", "31′ 7 1/2″ · 4:12"),
-                new DemoReadout("Bay spacing", "30′ 0″"),
+                new DemoReadout("Rafter", "31′ 7 1/2″ · 4:12"),
+                new DemoReadout("Bays", "4 · 30′ 0″ max"),
             ],
             response.Readouts);
-        Assert.Equal(new DemoSummary(5, 4, response.Lines.Length), response.Summary);
         Assert.Contains(response.Lines, line =>
             line.Kind == "frame" &&
             line.Start == new DemoPoint(0, 720, 216) &&
@@ -36,15 +34,13 @@ public sealed class DemoGeneratorTests
     }
 
     [Fact]
-    public void SingleSlopeRunsFromTheLowEaveToTheHighEave()
+    public void SingleSlopeDialogRunsFromTheLowEaveToTheHighEave()
     {
-        var response = Generate(new DemoRequest("single", 40, 100, 14, 0, 5, HighEaveFeet: 18));
+        var response = Generate(new WorkframeDialog("singleslope", Width: "40'", Length: "100'", LowEave: "14'", HighEave: "18'", SideBays: "5*20'"));
 
         Assert.True(response.Ok);
         // Pitch: 48 in of rise over 480 in of run = 1.2:12. Rafter: hypotenuse of 480 by 48 = 482.39 in.
-        Assert.Equal(new DemoReadout("Low eave", "14′ 0″"), response.Readouts[2]);
-        Assert.Equal(new DemoReadout("High eave", "18′ 0″"), response.Readouts[3]);
-        Assert.Equal(new DemoReadout("Roof slope", "40′ 2 3/8″ · 1.2:12"), response.Readouts[4]);
+        Assert.Equal(new DemoReadout("Rafter", "40′ 2 3/8″ · 1.2:12"), response.Readouts[4]);
         Assert.Contains(response.Lines, line =>
             line.Kind == "frame" &&
             line.Start == new DemoPoint(0, 480, 168) &&
@@ -52,20 +48,24 @@ public sealed class DemoGeneratorTests
     }
 
     [Fact]
-    public void OffCenterRidgeSetsTheLeftPitchSoBothRaftersMeet()
+    public void OffCenterDialogTakesEachSideOnItsOwn()
     {
-        var response = Generate(new DemoRequest("offset", 60, 120, 16, 3, 4, RidgeFeet: 40));
+        var response = Generate(new WorkframeDialog(
+            "offcenter",
+            SideBays: "4*30'",
+            Left: new DialogSide("20'", "16'", "120'", "6"),
+            Right: new DialogSide("40'", "16'", "120'", "3")));
 
         Assert.True(response.Ok);
-        // Right: 40 ft at 3:12 rises 10 ft, so the ridge is 26 ft. Left: 20 ft rising 10 ft is 6:12.
+        // Left: 20 ft at 6:12 rises 10 ft; right: 40 ft at 3:12 rises 10 ft, so both ridges are 26 ft.
         Assert.Equal(
             [
-                new DemoReadout("Span", "60′ 0″"),
-                new DemoReadout("Eave", "16′ 0″"),
-                new DemoReadout("Ridge", "26′ 0″"),
-                new DemoReadout("Right slope", "41′ 2 3/4″ · 3:12"),
-                new DemoReadout("Left slope", "22′ 4 5/16″ · 6:12"),
-                new DemoReadout("Bay spacing", "30′ 0″"),
+                new DemoReadout("Width", "60′ 0″"),
+                new DemoReadout("Left ridge", "26′ 0″"),
+                new DemoReadout("Right ridge", "26′ 0″"),
+                new DemoReadout("Left rafter", "22′ 4 5/16″ · 6:12"),
+                new DemoReadout("Right rafter", "41′ 2 3/4″ · 3:12"),
+                new DemoReadout("Bays", "4 · 30′ 0″ max"),
             ],
             response.Readouts);
         // At the ridge meet the two rafters and the interior column both sides share.
@@ -75,32 +75,28 @@ public sealed class DemoGeneratorTests
     }
 
     [Theory]
-    [InlineData("gable", 19, 18, 4, 4, 0, 0, "Span must be from 20 to 200 feet.")]
-    [InlineData("gable", 60, 18, 4, 0, 0, 0, "Bays must be a whole number from 1 to 20.")]
-    [InlineData("single", 60, 18, 0, 4, 12, 0, "High eave must be from 18 to 60 feet.")]
-    [InlineData("offset", 60, 18, 4, 4, 0, 60, "Ridge from right eave must be from 1 to 59 feet.")]
-    [InlineData("offset", 40, 18, 12, 4, 0, 38,
-        "The left side would be steeper than 12:12. Move the ridge toward the center or lower the pitch.")]
-    [InlineData("mansard", 60, 18, 4, 4, 0, 0, "Choose a gable, single slope or off-center ridge roof.")]
-    public void RefusesDimensionsOutsideTheDemoScope(
-        string roof,
-        double span,
-        double eave,
-        double pitch,
-        int bays,
-        double highEave,
-        double ridge,
-        string message)
+    [InlineData("symmetrical", "forty", "4", "4*30'", "Width: \"forty\" is not a length. Write it like 40', 25'6\" or 480.")]
+    [InlineData("symmetrical", "60'", "13", "4*30'", "Pitch must be a rise per 12 from 0 to 12, for example 1 for 1:12.")]
+    [InlineData("symmetrical", "60'", "4", "x*30'", "Sidewall bays: \"x*30'\" needs a whole number before the *, for example 3*25'.")]
+    [InlineData("mansard", "60'", "4", "4*30'", "Choose Symmetrical, Single Slope or Off-Center Ridge.")]
+    public void RefusesEntriesTheDialogWouldRefuse(string roof, string width, string pitch, string sideBays, string message)
     {
-        var request = new DemoRequest(roof, span, 120, eave, pitch, bays, highEave, ridge);
-        var response = Generate(request);
+        var dialog = new WorkframeDialog(roof, Width: width, Eave: "18'", Length: "120'", Pitch: pitch, SideBays: sideBays);
+        var response = Generate(dialog);
 
         Assert.False(response.Ok);
         Assert.Equal(message, response.Error);
-        Assert.Null(response.Summary);
-        Assert.Empty(response.Readouts);
         Assert.Empty(response.Lines);
-        Assert.Equal("", DemoGenerator.GenerateDxf(Json(request)));
+        Assert.Equal("", DemoGenerator.GenerateDxf(Json(dialog)));
+    }
+
+    [Fact]
+    public void BaysLongerThanTheBuildingAreRefused()
+    {
+        var response = Generate(Symmetrical with { SideBays = "5*30'" });
+
+        Assert.False(response.Ok);
+        Assert.False(string.IsNullOrEmpty(response.Error));
     }
 
     [Theory]
@@ -116,8 +112,8 @@ public sealed class DemoGeneratorTests
     [Fact]
     public void DxfHoldsEveryLineAndBubbleAsWellFormedGroupPairs()
     {
-        var response = Generate(Gable);
-        var dxf = DemoGenerator.GenerateDxf(Json(Gable));
+        var response = Generate(Symmetrical);
+        var dxf = DemoGenerator.GenerateDxf(Json(Symmetrical));
 
         Assert.StartsWith("0\r\nSECTION\r\n2\r\nHEADER\r\n9\r\n$ACADVER\r\n1\r\nAC1009\r\n", dxf);
         Assert.EndsWith("0\r\nENDSEC\r\n0\r\nEOF\r\n", dxf);
@@ -139,9 +135,9 @@ public sealed class DemoGeneratorTests
         Assert.Contains("2\r\nPANTHEON-FRAME\r\n70\r\n0\r\n62\r\n3\r\n6\r\nCONTINUOUS\r\n", dxf);
     }
 
-    private static string Json(DemoRequest request) =>
-        JsonSerializer.Serialize(request, DemoJsonContext.Default.DemoRequest);
+    private static string Json(WorkframeDialog dialog) =>
+        JsonSerializer.Serialize(dialog, DemoJsonContext.Default.WorkframeDialog);
 
-    private static DemoResponse Generate(DemoRequest request) =>
-        JsonSerializer.Deserialize(DemoGenerator.GenerateJson(Json(request)), DemoJsonContext.Default.DemoResponse)!;
+    private static DemoResponse Generate(WorkframeDialog dialog) =>
+        JsonSerializer.Deserialize(DemoGenerator.GenerateJson(Json(dialog)), DemoJsonContext.Default.DemoResponse)!;
 }

@@ -6,16 +6,21 @@ using Pantheon.Core.Workframes;
 
 namespace Pantheon.Demo;
 
-/// <summary>Builds the workframes the browser demo shows and downloads.</summary>
+/// <summary>
+/// Builds the workframe the browser desk shows and downloads, from the same entries the add-in's
+/// workframe dialogs take, turned into Pantheon.Core models the way the add-in's member catalogue
+/// turns them.
+/// </summary>
 public static class DemoGenerator
 {
-    private const double InchesPerFoot = 12;
     private const double SteepestRisePerTwelve = 12;
+    private const double LargestLength = 400 * 12;
+    private const int MostBays = 40;
 
     /// <summary>Grid text height in inches; 9 in reads as 3/32 in on a sheet at 1/8 in = 1 ft.</summary>
     private const double TextHeight = 9;
 
-    /// <summary>Returns a stable JSON response for one browser request.</summary>
+    /// <summary>Returns a stable JSON response for one dialog's entries.</summary>
     public static string GenerateJson(string requestJson)
     {
         try
@@ -28,27 +33,22 @@ public static class DemoGenerator
             var bubbles = frame.Geometry.Bubbles
                 .Select(bubble => new DemoBubble(bubble.Label, Point(bubble.Center), bubble.Radius))
                 .ToArray();
-            var summary = new DemoSummary(frame.BayCount + 1, frame.BayCount, lines.Length);
-            return Serialize(new DemoResponse(true, null, "inches", frame.Readouts, summary, lines, bubbles));
+            return Serialize(new DemoResponse(true, null, frame.Readouts, lines, bubbles));
         }
-        catch (JsonException)
+        catch (Exception exception) when (exception is JsonException or ArgumentException or FormatException)
         {
-            return Failure("Enter numbers for every building dimension.");
-        }
-        catch (ArgumentException exception)
-        {
-            return Failure(exception.Message);
+            return Failure(exception is JsonException ? "Fill in every field of the dialog." : exception.Message);
         }
     }
 
-    /// <summary>Returns the workframe as an AutoCAD R12 DXF drawing in inches, or an empty string for a refused request.</summary>
+    /// <summary>Returns the workframe as an AutoCAD R12 DXF drawing in inches, or an empty string for refused entries.</summary>
     public static string GenerateDxf(string requestJson)
     {
         try
         {
             return WorkframeDxf.Write(Build(Parse(requestJson)).Geometry);
         }
-        catch (Exception exception) when (exception is JsonException or ArgumentException)
+        catch (Exception exception) when (exception is JsonException or ArgumentException or FormatException)
         {
             return "";
         }
@@ -81,158 +81,199 @@ public static class DemoGenerator
     public static string RisePerTwelve(double ratio) =>
         Math.Round(ratio * 12, 2).ToString("0.##", CultureInfo.InvariantCulture) + ":12";
 
-    private static DemoRequest Parse(string requestJson) =>
-        JsonSerializer.Deserialize(requestJson, DemoJsonContext.Default.DemoRequest)
-            ?? throw new ArgumentException("Enter the building dimensions.");
+    private static WorkframeDialog Parse(string requestJson) =>
+        JsonSerializer.Deserialize(requestJson, DemoJsonContext.Default.WorkframeDialog)
+            ?? throw new ArgumentException("Fill in the dialog.");
 
-    private static DemoFrame Build(DemoRequest request)
+    private static DemoFrame Build(WorkframeDialog dialog)
     {
-        InRange(request.SpanFeet, 20, 200, "Span", "feet");
-        InRange(request.LengthFeet, 20, 400, "Length", "feet");
-        InRange(request.EaveFeet, 8, 60, "Eave height", "feet");
-        if (request.BayCount is < 1 or > 20)
+        var bays = new BayLayout(Bays(dialog.SideBays, "Sidewall bays"), Bays(dialog.EndBays, "Endwall bays"));
+        return dialog.Roof switch
         {
-            throw new ArgumentException("Bays must be a whole number from 1 to 20.");
-        }
-
-        var span = request.SpanFeet * InchesPerFoot;
-        var length = request.LengthFeet * InchesPerFoot;
-        var eave = request.EaveFeet * InchesPerFoot;
-        var baySize = length / request.BayCount;
-        var framing = new Framing(8, 8, GirtAttachment.Flush);
-        var bays = new BayLayout(Enumerable.Repeat(baySize, request.BayCount), []);
-        var baySpacing = new DemoReadout("Bay spacing", FeetAndInches(baySize));
-
-        return request.Roof switch
-        {
-            "gable" => Gable(request, span, length, eave, framing, bays, baySpacing),
-            "single" => SingleSlope(request, span, length, eave, framing, bays, baySpacing),
-            "offset" => OffsetRidge(request, span, length, eave, framing, bays, baySpacing),
-            _ => throw new ArgumentException("Choose a gable, single slope or off-center ridge roof."),
+            "symmetrical" => Symmetrical(dialog, bays),
+            "singleslope" => SingleSlope(dialog, bays),
+            "offcenter" => OffCenter(dialog, bays),
+            _ => throw new ArgumentException("Choose Symmetrical, Single Slope or Off-Center Ridge."),
         };
     }
 
-    private static DemoFrame Gable(DemoRequest request, double span, double length, double eave,
-        Framing framing, BayLayout bays, DemoReadout baySpacing)
+    private static DemoFrame Symmetrical(WorkframeDialog dialog, BayLayout bays)
     {
-        InRange(request.PitchRise, 0, SteepestRisePerTwelve, "Pitch", "in 12");
-        var pitch = Pitch.FromRisePerTwelve(request.PitchRise);
-        var building = new SymmetricalWorkframe(span, length, eave, pitch, framing, bays);
-        var rafter = RightTriangle.FromRun(span / 2, pitch).Slope;
-        return new DemoFrame(building.Build(TextHeight), request.BayCount,
+        var width = Length(dialog.Width, "Width");
+        var length = Length(dialog.Length, "Length");
+        var eave = Length(dialog.Eave, "Eave height");
+        var pitch = Pitch.FromRisePerTwelve(RiseNumber(dialog.Pitch, "Pitch"));
+        var building = new SymmetricalWorkframe(width, length, eave, pitch, FramingOf(dialog.Purlin, dialog.Girt, dialog.Girts), bays);
+        return new DemoFrame(building.Build(TextHeight),
         [
-            new("Span", FeetAndInches(span)),
+            new("Width", FeetAndInches(width)),
             new("Length", FeetAndInches(length)),
             new("Eave", FeetAndInches(eave)),
             new("Ridge", FeetAndInches(building.RidgeHeight)),
-            new("Roof slope", $"{FeetAndInches(rafter)} · {RisePerTwelve(pitch)}"),
-            baySpacing,
+            new("Rafter", $"{FeetAndInches(RightTriangle.FromRun(width / 2, pitch).Slope)} · {RisePerTwelve(pitch)}"),
+            BayReadout(bays),
         ]);
     }
 
-    private static DemoFrame SingleSlope(DemoRequest request, double span, double length, double eave,
-        Framing framing, BayLayout bays, DemoReadout baySpacing)
+    private static DemoFrame SingleSlope(WorkframeDialog dialog, BayLayout bays)
     {
-        InRange(request.HighEaveFeet, request.EaveFeet, 60, "High eave", "feet");
-        var highEave = request.HighEaveFeet * InchesPerFoot;
-        var building = new SingleSlopeWorkframe(span, length, eave, highEave, framing, bays);
-        if (building.Pitch * 12 > SteepestRisePerTwelve)
-        {
-            throw new ArgumentException("That roof is steeper than 12:12. Lower the high eave or widen the span.");
-        }
-
-        var rafter = RightTriangle.FromRun(span, building.Pitch).Slope;
-        return new DemoFrame(building.Build(TextHeight), request.BayCount,
+        var width = Length(dialog.Width, "Width");
+        var length = Length(dialog.Length, "Length");
+        var lowEave = Length(dialog.LowEave, "Low eave height");
+        var highEave = Length(dialog.HighEave, "High eave height");
+        var building = new SingleSlopeWorkframe(width, length, lowEave, highEave, FramingOf(dialog.Purlin, dialog.Girt, dialog.Girts), bays);
+        Steepness(building.Pitch, "The roof");
+        return new DemoFrame(building.Build(TextHeight),
         [
-            new("Span", FeetAndInches(span)),
+            new("Width", FeetAndInches(width)),
             new("Length", FeetAndInches(length)),
-            new("Low eave", FeetAndInches(eave)),
+            new("Low eave", FeetAndInches(lowEave)),
             new("High eave", FeetAndInches(highEave)),
-            new("Roof slope", $"{FeetAndInches(rafter)} · {RisePerTwelve(building.Pitch)}"),
-            baySpacing,
+            new("Rafter", $"{FeetAndInches(RightTriangle.FromRun(width, building.Pitch).Slope)} · {RisePerTwelve(building.Pitch)}"),
+            BayReadout(bays),
         ]);
     }
 
-    /// <summary>
-    /// Both eaves stand at one height, so the left side's pitch follows from where the ridge sits:
-    /// the two rafters must meet at the same ridge height.
-    /// </summary>
-    private static DemoFrame OffsetRidge(DemoRequest request, double span, double length, double eave,
-        Framing framing, BayLayout bays, DemoReadout baySpacing)
+    /// <summary>The add-in's off-center dialog takes each side on its own: the left is the far side, the right the near side.</summary>
+    private static DemoFrame OffCenter(WorkframeDialog dialog, BayLayout bays)
     {
-        InRange(request.PitchRise, 0, SteepestRisePerTwelve, "Pitch", "in 12");
-        InRange(request.RidgeFeet, 1, request.SpanFeet - 1, "Ridge from right eave", "feet");
-        var rightWidth = request.RidgeFeet * InchesPerFoot;
-        var leftWidth = span - rightWidth;
-        var rightPitch = Pitch.FromRisePerTwelve(request.PitchRise);
-        var leftPitch = rightWidth * rightPitch / leftWidth;
-        if (leftPitch * 12 > SteepestRisePerTwelve)
+        var left = SideOf(dialog.Left, "Left side");
+        var right = SideOf(dialog.Right, "Right side");
+        var building = new OffsetRidgeWorkframe(left, right, bays);
+        return new DemoFrame(building.Build(TextHeight),
+        [
+            new("Width", FeetAndInches(left.Width + right.Width)),
+            new("Left ridge", FeetAndInches(left.RidgeHeight)),
+            new("Right ridge", FeetAndInches(right.RidgeHeight)),
+            new("Left rafter", $"{FeetAndInches(RightTriangle.FromRun(left.Width, left.Pitch).Slope)} · {RisePerTwelve(left.Pitch)}"),
+            new("Right rafter", $"{FeetAndInches(RightTriangle.FromRun(right.Width, right.Pitch).Slope)} · {RisePerTwelve(right.Pitch)}"),
+            BayReadout(bays),
+        ]);
+    }
+
+    private static RoofSide SideOf(DialogSide? side, string group)
+    {
+        if (side is null)
         {
-            throw new ArgumentException("The left side would be steeper than 12:12. Move the ridge toward the center or lower the pitch.");
+            throw new ArgumentException($"{group}: fill in its fields.");
         }
 
-        var right = new RoofSide(rightWidth, length, eave, rightPitch, framing);
-        var left = new RoofSide(leftWidth, length, eave, leftPitch, framing);
-        var building = new OffsetRidgeWorkframe(left, right, bays);
-        return new DemoFrame(building.Build(TextHeight), request.BayCount,
-        [
-            new("Span", FeetAndInches(span)),
-            new("Eave", FeetAndInches(eave)),
-            new("Ridge", FeetAndInches(right.RidgeHeight)),
-            new("Right slope", $"{FeetAndInches(RightTriangle.FromRun(rightWidth, rightPitch).Slope)} · {RisePerTwelve(rightPitch)}"),
-            new("Left slope", $"{FeetAndInches(RightTriangle.FromRun(leftWidth, leftPitch).Slope)} · {RisePerTwelve(leftPitch)}"),
-            baySpacing,
-        ]);
+        return new RoofSide(
+            Length(side.Width, $"{group} width"),
+            Length(side.Length, $"{group} length"),
+            Length(side.Eave, $"{group} eave height"),
+            Pitch.FromRisePerTwelve(RiseNumber(side.Pitch, $"{group} pitch")),
+            FramingOf(side.Purlin, side.Girt, side.Girts));
     }
 
-    private static void InRange(double value, double minimum, double maximum, string name, string unit)
+    private static Framing FramingOf(string purlin, string girt, string girts) =>
+        new(Length(purlin, "Purlin depth"), Length(girt, "Girt depth"), girts == "Bypass" ? GirtAttachment.Bypass : GirtAttachment.Flush);
+
+    private static DemoReadout BayReadout(BayLayout bays) =>
+        new("Bays", bays.SideBays.Count == 0 ? "Ends only" : $"{bays.SideBays.Count} · {FeetAndInches(bays.SideBays.Max())} max");
+
+    private static double Length(string text, string caption)
     {
-        if (!double.IsFinite(value) || value < minimum || value > maximum)
+        double inches;
+        try
         {
-            throw new ArgumentException($"{name} must be from {minimum:g} to {maximum:g} {unit}.");
+            inches = ArchitecturalLength.Parse(text);
+        }
+        catch (FormatException exception)
+        {
+            throw new FormatException($"{caption}: {exception.Message}", exception);
+        }
+
+        if (inches > LargestLength)
+        {
+            throw new ArgumentException($"{caption} must be 400' or less in this demo.");
+        }
+
+        return inches;
+    }
+
+    private static double RiseNumber(string text, string caption)
+    {
+        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var rise) || rise < 0 || rise > SteepestRisePerTwelve)
+        {
+            throw new ArgumentException($"{caption} must be a rise per 12 from 0 to 12, for example 1 for 1:12.");
+        }
+
+        return rise;
+    }
+
+    private static void Steepness(double ratio, string what)
+    {
+        if (ratio * 12 > SteepestRisePerTwelve)
+        {
+            throw new ArgumentException($"{what} is steeper than 12:12 in this demo.");
+        }
+    }
+
+    private static List<double> Bays(string text, string caption)
+    {
+        try
+        {
+            var bays = BayList.Parse(text ?? "", ArchitecturalLength.Parse).ToList();
+            if (bays.Count > MostBays)
+            {
+                throw new ArgumentException($"{caption}: {MostBays} bays at most in this demo.");
+            }
+
+            return bays;
+        }
+        catch (FormatException exception)
+        {
+            throw new FormatException($"{caption}: {exception.Message}", exception);
         }
     }
 
     private static DemoPoint Point(Pantheon.Core.Geometry.Point3 point) => new(point.X, point.Y, point.Z);
 
     private static string Failure(string message) =>
-        Serialize(new DemoResponse(false, message, "inches", [], null, [], []));
+        Serialize(new DemoResponse(false, message, [], [], []));
 
     private static string Serialize(DemoResponse response) =>
         JsonSerializer.Serialize(response, DemoJsonContext.Default.DemoResponse);
 
-    private sealed record DemoFrame(WorkframeGeometry Geometry, int BayCount, DemoReadout[] Readouts);
+    private sealed record DemoFrame(WorkframeGeometry Geometry, DemoReadout[] Readouts);
 }
 
 /// <summary>
-/// The dimensions editable in the browser, in feet. <see cref="Roof"/> is gable, single or offset;
-/// a single slope reads <see cref="HighEaveFeet"/>, an off-center ridge reads <see cref="RidgeFeet"/>.
+/// One workframe dialog's entries, as typed. <see cref="Roof"/> is symmetrical, singleslope or
+/// offcenter; an off-center frame reads <see cref="Left"/> and <see cref="Right"/> and the bays.
 /// </summary>
-public sealed record DemoRequest(
+public sealed record WorkframeDialog(
     string Roof,
-    double SpanFeet,
-    double LengthFeet,
-    double EaveFeet,
-    double PitchRise,
-    int BayCount,
-    double HighEaveFeet = 0,
-    double RidgeFeet = 0);
+    string Width = "",
+    string Eave = "",
+    string Length = "",
+    string Pitch = "",
+    string LowEave = "",
+    string HighEave = "",
+    string Purlin = "8\"",
+    string Girt = "8\"",
+    string Girts = "Flush",
+    string SideBays = "",
+    string EndBays = "",
+    DialogSide? Left = null,
+    DialogSide? Right = null);
+
+/// <summary>One side of the off-center dialog.</summary>
+public sealed record DialogSide(
+    string Width,
+    string Eave,
+    string Length,
+    string Pitch,
+    string Purlin = "8\"",
+    string Girt = "8\"",
+    string Girts = "Flush");
 
 /// <summary>The result returned across the .NET-to-JavaScript boundary.</summary>
-public sealed record DemoResponse(
-    bool Ok,
-    string? Error,
-    string Unit,
-    DemoReadout[] Readouts,
-    DemoSummary? Summary,
-    DemoLine[] Lines,
-    DemoBubble[] Bubbles);
+public sealed record DemoResponse(bool Ok, string? Error, DemoReadout[] Readouts, DemoLine[] Lines, DemoBubble[] Bubbles);
 
 /// <summary>One calculated dimension, already written as a drafter reads it.</summary>
 public sealed record DemoReadout(string Label, string Value);
-
-/// <summary>The counts shown under the drawing.</summary>
-public sealed record DemoSummary(int FrameCount, int BayCount, int LineCount);
 
 /// <summary>One Pantheon.Core workframe line.</summary>
 public sealed record DemoLine(string Kind, DemoPoint Start, DemoPoint End);
@@ -244,7 +285,7 @@ public sealed record DemoBubble(string Label, DemoPoint Center, double Radius);
 public sealed record DemoPoint(double X, double Y, double Z);
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-[JsonSerializable(typeof(DemoRequest))]
+[JsonSerializable(typeof(WorkframeDialog))]
 [JsonSerializable(typeof(DemoResponse))]
 public sealed partial class DemoJsonContext : JsonSerializerContext
 {

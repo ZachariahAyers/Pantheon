@@ -19,7 +19,7 @@ AutoCAD 2027 add-in in VB.NET that draws metal building framing (workframes, sla
 - Option Strict is on and the .NET recommended analyzers fail the build on any warning.
 - CI builds and tests on every push to master; Dependabot checks dependencies monthly.
 - A browser drawing desk runs the real `Pantheon.Core` workframe geometry through a small .NET WebAssembly adapter and renders its returned line endpoints at `/opensource/pantheon/`.
-- The browser desk draws gable, single slope and off-center ridge workframes with their grid bubbles, writes lengths in feet and inches to the nearest sixteenth, and downloads the frame as a DXF drawing in inches.
+- The project page plays WORKFRAME from an empty drawing: a cursor presses the add-in's ribbon button, fills its real dialog (the same fields, defaults and bay notation) and picks the entry point, and Pantheon.Core draws the frame line by line. Visitors can then open any of the three workframe dialogs, draw their own and download it as a DXF drawing in inches.
 - The ribbon tab appears when AutoCAD starts, and adds Zee, Cee, Eave Strut, Palettes and About buttons.
 - `PANTHEONABOUT` shows the version and opens the quick start, the privacy policy, an email to support or the source code.
 - A Release build lays out the Autodesk App Store bundle (`Pantheon.bundle` and `Pantheon.bundle.zip`) with its quick start page.

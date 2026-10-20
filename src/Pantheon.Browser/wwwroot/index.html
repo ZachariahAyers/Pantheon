@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
             name="description"
-            content="Pantheon is a free AutoCAD add-in that draws metal building framing from the engineer's numbers. Try its workframe geometry in your browser and download the drawing as DXF."
+            content="Pantheon is a free AutoCAD add-in that draws metal building framing from the engineer's numbers. Watch it draw a workframe from an empty drawing, then draw your own in the browser."
         />
         <link rel="canonical" href="https://ayers.repair/opensource/pantheon/" />
         <link rel="stylesheet" href="./app.css" />
@@ -34,103 +34,65 @@
                 </div>
                 <div class="pitch">
                     <p>
-                        Pantheon draws workframes, slabs, base plates, girts, purlins and eave struts in AutoCAD.
-                        Try a workframe below: it runs Pantheon's own geometry code in your browser.
+                        Watch Pantheon draw a building's workframe from an empty drawing: its own ribbon, its
+                        own dialog and its own geometry code, running in your browser. Then draw your own.
                     </p>
                     <p class="store-note">Coming free to the Autodesk App Store.</p>
                 </div>
             </section>
 
-            <section class="desk" aria-label="Interactive workframe drawing desk">
-                <form id="frame-form" class="controls">
-                    <div class="panel-heading">
-                        <span>Input / 01</span>
-                        <h2>Building schedule</h2>
+            <section class="cad-stage" aria-label="Pantheon at work">
+                <div class="cad-window" id="cad">
+                    <div class="cad-titlebar">
+                        <span class="cad-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                        <span>Building.dwg</span>
                     </div>
-
-                    <fieldset class="roof-choice">
-                        <legend>Roof</legend>
-                        <label><input type="radio" name="roof" value="gable" checked /><span>Gable</span></label>
-                        <label><input type="radio" name="roof" value="single" /><span>Single slope</span></label>
-                        <label><input type="radio" name="roof" value="offset" /><span>Off-center</span></label>
-                    </fieldset>
-
-                    <div class="field-grid">
-                        <label>
-                            <span>Span <small>feet</small></span>
-                            <input name="spanFeet" type="number" min="20" max="200" step="1" value="60" required />
-                        </label>
-                        <label>
-                            <span>Length <small>feet</small></span>
-                            <input name="lengthFeet" type="number" min="20" max="400" step="1" value="120" required />
-                        </label>
-                        <label>
-                            <span><span data-roof-label="eave">Eave</span> <small>feet</small></span>
-                            <input name="eaveFeet" type="number" min="8" max="60" step="1" value="18" required />
-                        </label>
-                        <label data-roofs="single">
-                            <span>High eave <small>feet</small></span>
-                            <input name="highEaveFeet" type="number" min="8" max="60" step="1" value="24" required />
-                        </label>
-                        <label data-roofs="gable offset">
-                            <span><span data-roof-label="pitch">Pitch</span> <small>rise / 12</small></span>
-                            <input name="pitchRise" type="number" min="0" max="12" step="0.5" value="4" required />
-                        </label>
-                        <label data-roofs="offset">
-                            <span>Ridge <small>feet from right eave</small></span>
-                            <input name="ridgeFeet" type="number" min="1" max="199" step="1" value="40" required />
-                        </label>
-                        <label>
-                            <span>Equal bays <small>count</small></span>
-                            <input name="bayCount" type="number" min="1" max="20" step="1" value="4" required />
-                        </label>
+                    <div class="cad-tabs" aria-hidden="true">
+                        <span>Home</span><span>Insert</span><span>Annotate</span><span>View</span
+                        ><span class="cad-tab" id="pantheon-tab">Pantheon</span>
                     </div>
-
-                    <p class="scope-note">
-                        The add-in also takes unequal bays, endwall bays, purlin and girt depths, and each side of an
-                        off-center ridge on its own.
-                    </p>
-                    <div class="actions">
-                        <button type="submit">Rebuild workframe</button>
-                        <button type="button" id="download" class="secondary">Download DXF</button>
+                    <div class="cad-ribbon" id="ribbon" role="toolbar" aria-label="Pantheon ribbon"></div>
+                    <div class="cad-body">
+                        <figure class="cad-canvas">
+                            <svg id="model" role="img" aria-labelledby="model-title">
+                                <title id="model-title">The drawing: Pantheon's workframe, seen from the south-west</title>
+                            </svg>
+                            <div class="cad-dialog" id="dialog" role="dialog" aria-labelledby="dialog-title" hidden>
+                                <div class="cad-dialog-title" id="dialog-title"></div>
+                                <div class="cad-dialog-body"></div>
+                                <p class="cad-dialog-error" role="alert"></p>
+                                <div class="cad-dialog-buttons">
+                                    <button type="button" class="cad-dialog-create">Create</button>
+                                    <button type="button" class="cad-dialog-cancel">Cancel</button>
+                                </div>
+                            </div>
+                            <div class="cad-clip" id="clip" hidden>
+                                <span class="cad-clip-tag">Clip from AutoCAD · coming</span>
+                                <strong id="clip-title"></strong>
+                                <p id="clip-text"></p>
+                            </div>
+                        </figure>
+                        <aside class="cad-palette" aria-labelledby="readouts-title">
+                            <h2 id="readouts-title">Properties</h2>
+                            <dl id="readouts" class="readouts"></dl>
+                            <p id="model-note" class="model-note"></p>
+                        </aside>
                     </div>
-                    <p id="status" class="status" role="status" aria-live="polite">Loading the geometry engine…</p>
-                </form>
-
-                <section class="drawing-panel" aria-labelledby="drawing-title">
-                    <div class="drawing-header">
-                        <div>
-                            <span>Model / 02</span>
-                            <h2 id="drawing-title">Workframe</h2>
-                        </div>
-                        <div class="legend" aria-label="Line legend">
-                            <span><i class="frame-key"></i>Frame</span>
-                            <span><i class="offset-key"></i>Purlin line</span>
-                            <span><i class="base-key"></i>Footprint</span>
-                        </div>
+                    <ol class="cad-command" id="command" aria-live="polite" aria-label="Command line"></ol>
+                    <div class="cad-cursor" id="cursor" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 2l15 11-6.5 1.2L16.5 21l-3 1.4-3.8-6.8L4 20z" /></svg>
                     </div>
-
-                    <div class="canvas-wrap">
-                        <svg id="workframe" viewBox="0 0 1000 620" role="img" aria-labelledby="svg-title svg-desc">
-                            <title id="svg-title">Pantheon workframe</title>
-                            <desc id="svg-desc">An isometric drawing made from Pantheon.Core workframe endpoints.</desc>
-                            <g id="drawing-lines"></g>
-                            <g id="drawing-bubbles"></g>
-                        </svg>
-                        <div class="axis" aria-hidden="true"><b>Z</b><i></i><span>X&nbsp;&nbsp;Y</span></div>
-                        <div class="sheet-mark" aria-hidden="true">
-                            <span>Sheet</span><strong>WF-01</strong><small>MODEL UNITS / IN</small>
-                        </div>
-                    </div>
-
-                    <dl id="readouts" class="readouts" aria-label="Calculated dimensions"></dl>
-                    <p id="model-note" class="model-note">Waiting for geometry.</p>
-                </section>
+                </div>
+                <div class="cad-controls">
+                    <button type="button" id="try" disabled>Try it yourself</button>
+                    <button type="button" id="replay" class="secondary" disabled>Replay</button>
+                    <button type="button" id="download" class="secondary" disabled>Download DXF</button>
+                </div>
             </section>
 
             <section id="commands" class="commands" aria-labelledby="commands-title">
                 <div class="panel-heading">
-                    <span>Add-in / 03</span>
+                    <span>Add-in</span>
                     <h2 id="commands-title">Commands</h2>
                 </div>
                 <p>Every command is on the Pantheon ribbon tab. Type <code>PANTHEON</code> to bring the tab back.</p>
@@ -161,7 +123,7 @@
             </p>
         </footer>
 
-        <noscript>This demo needs JavaScript to load Pantheon.Core in WebAssembly.</noscript>
+        <noscript>This page needs JavaScript to run Pantheon.Core in WebAssembly.</noscript>
         <script type="module" src="./app.js"></script>
     </body>
 </html>

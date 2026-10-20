@@ -32,9 +32,9 @@ Models validate in their constructors and throw `ArgumentException` (or `FormatE
 
 ## Browser demo
 
-`Pantheon.Browser` is a .NET WebAssembly executable with static files under `wwwroot`. Its two C# `JSExport`s accept a JSON request and pass it to `Pantheon.Demo`. The adapter constructs a real `SymmetricalWorkframe`, `SingleSlopeWorkframe` or `OffsetRidgeWorkframe` and calls `Build`. `Generate` returns the model-space line endpoints, grid bubbles and dimensions already written in feet and inches; `Dxf` returns the same geometry as an AutoCAD R12 DXF file (`WorkframeDxf`). JavaScript only projects the 3D endpoints into the SVG view and saves the DXF text.
+`Pantheon.Browser` is a .NET WebAssembly executable with static files under `wwwroot`. Its two C# `JSExport`s pass a workframe dialog's entries, as typed, to `Pantheon.Demo`, which reads lengths in architectural notation (`ArchitecturalLength`), bay lists with `BayList`, and builds a real `SymmetricalWorkframe`, `SingleSlopeWorkframe` or `OffsetRidgeWorkframe` the way `MemberCatalog` does. `Generate` returns the lines, grid bubbles and dimensions; `Dxf` returns the same geometry as an AutoCAD R12 DXF file (`WorkframeDxf`).
 
-The desk supports equal sidewall bays and fixed 8 in framing. Its off-center ridge keeps both eaves at one height, so the left pitch follows from where the ridge sits. The page lists the add-in's commands; `tests/site-commands.test.mjs` fails when that list, the ribbon and the registered commands disagree. The site is published under `/opensource/pantheon/` after the repository's build and test job passes on master.
+The page is a CAD window that plays the add-in from an empty drawing: `ribbon.js` and `icons/` are generated from `PantheonRibbon.vb` and the add-in's icons by `tools/site-ribbon.mjs`; `dialog-spec.js` repeats `MemberCatalog`'s three workframe dialogs; `cursor.js` moves the visible cursor, `dialog.js` lays out the dialog and `frame-scene.js` grows each line. The node tests fail when the ribbon copy, the dialog fields or the page's command list drift from the add-in. The site is published under `/opensource/pantheon/` after the repository's build and test job passes on master.
 
 ### Coordinates
 
