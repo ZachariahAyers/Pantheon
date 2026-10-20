@@ -181,13 +181,9 @@ Namespace Commands
             End Select
         End Function
 
-        ''' <summary>Draws a shape, reporting a bad size or pick on the command line.</summary>
+        ''' <summary>Draws a shape, reporting a bad size, a bad pick or an AutoCAD refusal on the command line.</summary>
         Private Shared Sub AddShape(target As DrawingTarget, shape As Func(Of Outline2))
-            Try
-                target.AddOutline(shape())
-            Catch ex As ArgumentException
-                target.Message(ex.Message)
-            End Try
+            target.Report(Sub() target.AddOutline(shape()))
         End Sub
 
         Private Shared Function AskKeyword(input As Editor, message As String, keywords As String) As String

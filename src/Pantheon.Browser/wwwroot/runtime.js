@@ -5,5 +5,6 @@ export async function loadGenerator(dotnet) {
     browserRuntime = await dotnet.create();
     const config = browserRuntime.getConfig();
     const exports = await browserRuntime.getAssemblyExports(config.mainAssemblyName);
-    return exports.Pantheon.Browser.BrowserAdapter.Generate;
+    const { Generate, Dxf } = exports.Pantheon.Browser.BrowserAdapter;
+    return { generate: Generate, dxf: Dxf };
 }

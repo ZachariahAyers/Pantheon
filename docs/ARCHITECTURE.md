@@ -32,9 +32,9 @@ Models validate in their constructors and throw `ArgumentException` (or `FormatE
 
 ## Browser demo
 
-`Pantheon.Browser` is a .NET WebAssembly executable with static files under `wwwroot`. Its single C# `JSExport` accepts a JSON request and passes it to `Pantheon.Demo`. The adapter constructs a real `SymmetricalWorkframe`, calls `Build`, and returns the resulting model-space line endpoints with calculated dimensions. JavaScript only projects those 3D endpoints into the SVG view.
+`Pantheon.Browser` is a .NET WebAssembly executable with static files under `wwwroot`. Its two C# `JSExport`s accept a JSON request and pass it to `Pantheon.Demo`. The adapter constructs a real `SymmetricalWorkframe`, `SingleSlopeWorkframe` or `OffsetRidgeWorkframe` and calls `Build`. `Generate` returns the model-space line endpoints, grid bubbles and dimensions already written in feet and inches; `Dxf` returns the same geometry as an AutoCAD R12 DXF file (`WorkframeDxf`). JavaScript only projects the 3D endpoints into the SVG view and saves the DXF text.
 
-The public desk deliberately supports one bounded case: a symmetrical gable frame with equal-length bays. It does not write a DWG or stand in for the AutoCAD commands. The generated site is published under `/opensource/pantheon/` after the repository's build and test job passes.
+The desk supports equal sidewall bays and fixed 8 in framing. Its off-center ridge keeps both eaves at one height, so the left pitch follows from where the ridge sits. The page lists the add-in's commands; `tests/site-commands.test.mjs` fails when that list, the ribbon and the registered commands disagree. The site is published under `/opensource/pantheon/` after the repository's build and test job passes on master.
 
 ### Coordinates
 
@@ -60,13 +60,19 @@ The add-in. It targets `net10.0-windows` with WinForms and WPF, and holds no geo
 | --- | --- |
 | `Commands` | The `CommandMethod` entry points: interface, member and shape commands |
 | `Drawing` | `DrawingTarget` (transactions, layers, blocks, UCS), `MemberDrawing` (Core model to entities), conversions |
-| `Ui` | Ribbon tab, palettes, icons, and `Ui/Members`: the generic member dialog and the catalogue of member types |
+| `Ui` | Ribbon tab, palettes, icons, the About box and product links, the startup hook that adds the tab, and `Ui/Members`: the generic member dialog and the catalogue of member types |
 
 A member command runs this flow:
 
 1. `MemberDefinition.Run` shows a `MemberDialog` built from the member's field list.
 2. On Create, `MemberValues` reads the entries (distances through AutoCAD's unit parser) and the definition builds the Core model. Any error keeps the dialog open with its message.
-3. After the dialog closes, `MemberDrawing` asks for the insertion point and `DrawingTarget.InsertBlock` writes the block in one transaction.
+3. After the dialog closes, `MemberDrawing` asks for the insertion point and `DrawingTarget.InsertBlock` writes the block in one transaction. A locked target layer stops it with a message.
+
+Every command runs its drawing step through `DrawingTarget.Report`, so bad input and AutoCAD refusals end on the command line, never in AutoCAD's error dialog.
+
+## Store bundle
+
+A Release build of the add-in also writes `Pantheon.bundle`, the Autodesk autoloader layout: `PackageContents.xml`, the add-in and `Pantheon.Core` under `Contents/net10.0-windows`, and the quick start under `Contents/Help`. `Pantheon.bundle.zip` is what goes to the Autodesk App Store, which builds the final installer. CI uploads the zip from every build.
 
 The member types, their fields and their defaults are all in `Ui/Members/MemberCatalog.vb`.
 
@@ -74,4 +80,4 @@ The member types, their fields and their defaults are all in `Ui/Members/MemberC
 
 `tests/Pantheon.Core.Tests` uses xUnit v3. Expected vertices are worked by hand or from closed forms, never produced by the code under test. `tests/Pantheon.Demo.Tests` proves the browser adapter returns those Core endpoints and refuses input outside the demo's stated range.
 
-CI builds the whole solution and runs these tests on a Windows runner. The add-in compiles there against Autodesk's reference assemblies, but nothing can run inside AutoCAD on a runner; drawing behaviour is checked by loading the add-in in AutoCAD 2027.
+CI builds the whole solution and runs these tests on a Windows runner. The add-in compiles there, and on Linux or macOS, against Autodesk's reference assemblies, but nothing can run inside AutoCAD on a runner; drawing behaviour is checked by loading the add-in in AutoCAD 2027.

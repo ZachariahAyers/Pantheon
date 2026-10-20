@@ -8,6 +8,8 @@
     <RootNamespace>Pantheon.AutoCAD</RootNamespace>
     <AssemblyName>Pantheon</AssemblyName>
     <MyType>Empty</MyType>
+    <!-- Lets the add-in compile on Linux and macOS; only AutoCAD on Windows runs it. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,5 +24,20 @@
   <ItemGroup>
     <EmbeddedResource Include="Icons\*.bmp;Icons\*.png" LogicalName="Pantheon.Icons.%(Filename)%(Extension)" />
   </ItemGroup>
+
+  <!-- A Release build also lays out the Autodesk App Store bundle beside the add-in. -->
+  <Target Name="AssembleBundle" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <BundleDir>$(OutDir)Pantheon.bundle/</BundleDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <BundleAssembly Include="$(OutDir)*.dll" />
+    </ItemGroup>
+    <RemoveDir Directories="$(BundleDir)" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)PackageContents.xml" DestinationFolder="$(BundleDir)" />
+    <Copy SourceFiles="@(BundleAssembly)" DestinationFolder="$(BundleDir)Contents/net10.0-windows/" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)Help/Pantheon.html" DestinationFolder="$(BundleDir)Contents/Help" />
+    <ZipDirectory SourceDirectory="$(BundleDir)" DestinationFile="$(OutDir)Pantheon.bundle.zip" Overwrite="true" />
+  </Target>
 
 </Project>

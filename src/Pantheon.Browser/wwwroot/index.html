@@ -5,33 +5,40 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
             name="description"
-            content="Draw a symmetrical metal-building workframe in the browser with Pantheon's real .NET geometry engine."
+            content="Pantheon is a free AutoCAD add-in that draws metal building framing from the engineer's numbers. Try its workframe geometry in your browser and download the drawing as DXF."
         />
         <link rel="canonical" href="https://ayers.repair/opensource/pantheon/" />
         <link rel="stylesheet" href="./app.css" />
-        <title>Pantheon structural drawing desk</title>
+        <title>Pantheon for AutoCAD</title>
     </head>
     <body>
         <header class="topbar">
-            <a class="brand" href="./" aria-label="Pantheon drawing desk home">
+            <a class="brand" href="./" aria-label="Pantheon home">
                 <svg viewBox="0 0 48 48" aria-hidden="true">
                     <path d="M7 39V20L24 8l17 12v19M7 21h34M14 39V24m20 15V24M13 39h22" />
                 </svg>
-                <span><strong>Pantheon</strong><small>Structural drawing desk</small></span>
+                <span><strong>Pantheon</strong><small>Free AutoCAD add-in</small></span>
             </a>
             <nav aria-label="Project links">
-                <a href="https://ayers.repair/opensource/">Open Source</a>
+                <a href="#commands">Commands</a>
                 <a href="https://github.com/ZachariahAyers/Pantheon">Source</a>
+                <a href="https://ayers.repair/opensource/">Open Source</a>
             </nav>
         </header>
 
         <main>
             <section class="intro" aria-labelledby="page-title">
                 <div>
-                    <p class="kicker">Workframe preview</p>
-                    <h1 id="page-title">Structural drawing desk</h1>
+                    <p class="kicker">Free · Made in the USA</p>
+                    <h1 id="page-title">Metal building framing, straight from the engineer's numbers</h1>
                 </div>
-                <p>Explore symmetrical gable framing. Create drawings with the AutoCAD add-in.</p>
+                <div class="pitch">
+                    <p>
+                        Pantheon draws workframes, slabs, base plates, girts, purlins and eave struts in AutoCAD.
+                        Try a workframe below: it runs Pantheon's own geometry code in your browser.
+                    </p>
+                    <p class="store-note">Coming free to the Autodesk App Store.</p>
+                </div>
             </section>
 
             <section class="desk" aria-label="Interactive workframe drawing desk">
@@ -40,6 +47,13 @@
                         <span>Input / 01</span>
                         <h2>Building schedule</h2>
                     </div>
+
+                    <fieldset class="roof-choice">
+                        <legend>Roof</legend>
+                        <label><input type="radio" name="roof" value="gable" checked /><span>Gable</span></label>
+                        <label><input type="radio" name="roof" value="single" /><span>Single slope</span></label>
+                        <label><input type="radio" name="roof" value="offset" /><span>Off-center</span></label>
+                    </fieldset>
 
                     <div class="field-grid">
                         <label>
@@ -51,24 +65,35 @@
                             <input name="lengthFeet" type="number" min="20" max="400" step="1" value="120" required />
                         </label>
                         <label>
-                            <span>Eave <small>feet</small></span>
+                            <span><span data-roof-label="eave">Eave</span> <small>feet</small></span>
                             <input name="eaveFeet" type="number" min="8" max="60" step="1" value="18" required />
                         </label>
-                        <label>
-                            <span>Pitch <small>rise / 12</small></span>
+                        <label data-roofs="single">
+                            <span>High eave <small>feet</small></span>
+                            <input name="highEaveFeet" type="number" min="8" max="60" step="1" value="24" required />
+                        </label>
+                        <label data-roofs="gable offset">
+                            <span><span data-roof-label="pitch">Pitch</span> <small>rise / 12</small></span>
                             <input name="pitchRise" type="number" min="0" max="12" step="0.5" value="4" required />
                         </label>
-                        <label class="wide-field">
+                        <label data-roofs="offset">
+                            <span>Ridge <small>feet from right eave</small></span>
+                            <input name="ridgeFeet" type="number" min="1" max="199" step="1" value="40" required />
+                        </label>
+                        <label>
                             <span>Equal bays <small>count</small></span>
                             <input name="bayCount" type="number" min="1" max="20" step="1" value="4" required />
                         </label>
                     </div>
 
                     <p class="scope-note">
-                        This browser view supports symmetrical gable frames with equal bays. The AutoCAD add-in also
-                        handles single-slope and off-centre ridge workframes, detailed members, and drawing output.
+                        The add-in also takes unequal bays, endwall bays, purlin and girt depths, and each side of an
+                        off-center ridge on its own.
                     </p>
-                    <button type="submit">Rebuild workframe</button>
+                    <div class="actions">
+                        <button type="submit">Rebuild workframe</button>
+                        <button type="button" id="download" class="secondary">Download DXF</button>
+                    </div>
                     <p id="status" class="status" role="status" aria-live="polite">Loading the geometry engine…</p>
                 </form>
 
@@ -76,7 +101,7 @@
                     <div class="drawing-header">
                         <div>
                             <span>Model / 02</span>
-                            <h2 id="drawing-title">Gable workframe</h2>
+                            <h2 id="drawing-title">Workframe</h2>
                         </div>
                         <div class="legend" aria-label="Line legend">
                             <span><i class="frame-key"></i>Frame</span>
@@ -87,9 +112,10 @@
 
                     <div class="canvas-wrap">
                         <svg id="workframe" viewBox="0 0 1000 620" role="img" aria-labelledby="svg-title svg-desc">
-                            <title id="svg-title">Pantheon gable workframe</title>
+                            <title id="svg-title">Pantheon workframe</title>
                             <desc id="svg-desc">An isometric drawing made from Pantheon.Core workframe endpoints.</desc>
                             <g id="drawing-lines"></g>
+                            <g id="drawing-bubbles"></g>
                         </svg>
                         <div class="axis" aria-hidden="true"><b>Z</b><i></i><span>X&nbsp;&nbsp;Y</span></div>
                         <div class="sheet-mark" aria-hidden="true">
@@ -97,22 +123,42 @@
                         </div>
                     </div>
 
-                    <dl id="readouts" class="readouts" aria-label="Calculated dimensions">
-                        <div><dt>Span</dt><dd>—</dd></div>
-                        <div><dt>Length</dt><dd>—</dd></div>
-                        <div><dt>Eave</dt><dd>—</dd></div>
-                        <div><dt>Ridge</dt><dd>—</dd></div>
-                        <div><dt>Roof slope</dt><dd>—</dd></div>
-                        <div><dt>Bay spacing</dt><dd>—</dd></div>
-                    </dl>
+                    <dl id="readouts" class="readouts" aria-label="Calculated dimensions"></dl>
                     <p id="model-note" class="model-note">Waiting for geometry.</p>
                 </section>
+            </section>
+
+            <section id="commands" class="commands" aria-labelledby="commands-title">
+                <div class="panel-heading">
+                    <span>Add-in / 03</span>
+                    <h2 id="commands-title">Commands</h2>
+                </div>
+                <p>Every command is on the Pantheon ribbon tab. Type <code>PANTHEON</code> to bring the tab back.</p>
+                <dl class="command-list">
+                    <div><dt><code>WORKFRAME</code></dt><dd>A gable, single slope or off-center ridge workframe with frame lines, purlin and girt lines, and grid bubbles.</dd></div>
+                    <div><dt><code>SLAB</code></dt><dd>A foundation slab, with an optional brick-ledge notch.</dd></div>
+                    <div><dt><code>COLUMN</code></dt><dd>A straight column base plate with its anchor holes.</dd></div>
+                    <div><dt><code>ZEE</code></dt><dd>A zee girt or purlin section, at any roof pitch.</dd></div>
+                    <div><dt><code>CEE</code></dt><dd>A cee jamb or post section.</dd></div>
+                    <div><dt><code>EAVECEE</code></dt><dd>An eave strut in any of its four orientations.</dd></div>
+                    <div><dt><code>PANTHEON</code></dt><dd>Shows the ribbon tab and the palettes.</dd></div>
+                    <div><dt><code>PANTHEONPALETTE</code></dt><dd>Shows the Shapes and Pitch palettes.</dd></div>
+                    <div><dt><code>PANTHEONABOUT</code></dt><dd>The version, the quick start, the privacy policy and support.</dd></div>
+                </dl>
+                <p class="requirements">
+                    Runs in AutoCAD 2027 on 64-bit Windows. Bay lists read the way engineers write them, such as
+                    <code>3*25',20'</code>. Each member is a named block on its own layer.
+                </p>
             </section>
         </main>
 
         <footer>
-            <span>Pantheon 2.0 · GPL-3.0</span>
-            <p>Pantheon.Core runs locally in WebAssembly. This demo makes no drawing file; use the add-in in AutoCAD 2027 to create CAD entities.</p>
+            <span>Made in the USA by Ayers Electronics. Free.</span>
+            <p>
+                Pantheon 2.0.0 · GPL-3.0 ·
+                <a href="https://ayers.repair/legal/pantheon/privacy.html">Privacy</a> ·
+                <a href="mailto:support@ayers.repair">support@ayers.repair</a>
+            </p>
         </footer>
 
         <noscript>This demo needs JavaScript to load Pantheon.Core in WebAssembly.</noscript>

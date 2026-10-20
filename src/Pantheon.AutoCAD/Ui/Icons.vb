@@ -18,7 +18,11 @@ Namespace Ui
             End Using
         End Function
 
-        Friend Function LoadRibbonImage(fileName As String) As BitmapImage
+        ''' <summary>
+        ''' A ribbon image with the grey background made transparent. A nonzero <paramref name="size"/>
+        ''' decodes it at that many pixels square.
+        ''' </summary>
+        Friend Function LoadRibbonImage(fileName As String, Optional size As Integer = 0) As BitmapImage
             Using source = LoadBitmap(fileName), encoded = New MemoryStream()
                 source.MakeTransparent(RibbonBackground)
                 source.Save(encoded, ImageFormat.Png)
@@ -26,6 +30,10 @@ Namespace Ui
                 Dim image = New BitmapImage()
                 image.BeginInit()
                 image.CacheOption = BitmapCacheOption.OnLoad
+                If size > 0 Then
+                    image.DecodePixelWidth = size
+                    image.DecodePixelHeight = size
+                End If
                 image.StreamSource = encoded
                 image.EndInit()
                 image.Freeze()

@@ -154,11 +154,20 @@ h1 {
     line-height: 1;
 }
 
-.intro > p {
+.pitch p {
     margin: 0;
     color: #b7c9c7;
     font-size: 15px;
     line-height: 1.65;
+}
+
+.pitch .store-note {
+    margin-top: 12px;
+    color: var(--cyan);
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .desk {
@@ -203,10 +212,69 @@ h2 {
     font-weight: 400;
 }
 
+.roof-choice {
+    display: grid;
+    margin: 0 0 18px;
+    padding: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 1px solid var(--line);
+}
+
+.roof-choice legend {
+    margin-bottom: 7px;
+    padding: 0;
+    color: #bfd0ce;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.roof-choice label {
+    position: relative;
+    display: grid;
+    min-height: 40px;
+    place-items: center;
+    border-right: 1px solid var(--line);
+    cursor: pointer;
+    font-size: 11px;
+    text-align: center;
+}
+
+.roof-choice label:last-child {
+    border-right: 0;
+}
+
+.roof-choice input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    opacity: 0;
+}
+
+.roof-choice input:checked + span {
+    color: var(--cyan);
+    font-weight: 750;
+}
+
+.roof-choice label:has(input:checked) {
+    background: var(--cyan-soft);
+}
+
+.roof-choice label:has(input:focus-visible) {
+    outline: 2px solid var(--cyan);
+    outline-offset: -2px;
+}
+
 .field-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
+}
+
+.field-grid [hidden] {
+    display: none;
 }
 
 .field-grid label {
@@ -283,6 +351,21 @@ button:focus-visible {
 button:disabled {
     cursor: wait;
     opacity: 0.55;
+}
+
+.actions {
+    display: grid;
+    gap: 10px;
+}
+
+button.secondary {
+    background: transparent;
+    color: var(--cyan);
+}
+
+button.secondary:hover,
+button.secondary:focus-visible {
+    background: var(--cyan-soft);
 }
 
 .status {
@@ -400,6 +483,25 @@ button:disabled {
     stroke: var(--amber);
     stroke-dasharray: 7 5;
     stroke-width: 1.1;
+}
+
+#drawing-bubbles circle {
+    fill: #061920;
+    stroke: rgba(176, 214, 211, 0.6);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+#drawing-bubbles text {
+    fill: #cfe0de;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 11px;
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
+#drawing-lines.stale + #drawing-bubbles {
+    opacity: 0.22;
 }
 
 #drawing-lines .annotation {
@@ -538,6 +640,51 @@ button:disabled {
     text-transform: uppercase;
 }
 
+.commands {
+    padding: 48px 0 12px;
+}
+
+.commands > p {
+    max-width: 65ch;
+    color: #b7c9c7;
+    font-size: 15px;
+    line-height: 1.65;
+}
+
+.command-list {
+    display: grid;
+    margin: 24px 0;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+    border-top: 1px solid var(--line);
+}
+
+.command-list div {
+    display: grid;
+    min-width: 0;
+    padding: 16px 0;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+}
+
+.command-list dt,
+code {
+    color: var(--cyan);
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 13px;
+}
+
+.command-list dd {
+    margin: 0;
+    color: #b7c9c7;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.commands .requirements {
+    color: var(--muted);
+}
+
 footer {
     display: flex;
     width: min(1480px, calc(100% - 48px));
@@ -546,12 +693,16 @@ footer {
     justify-content: space-between;
     gap: 30px;
     color: var(--muted);
-    font-size: 8px;
+    font-size: 10px;
 }
 
 footer p {
     margin: 0;
     text-align: right;
+}
+
+footer a {
+    color: var(--ink);
 }
 
 noscript {
@@ -707,6 +858,11 @@ noscript {
 
     .sheet-mark {
         display: none;
+    }
+
+    .command-list div {
+        grid-template-columns: 1fr;
+        gap: 4px;
     }
 }
 

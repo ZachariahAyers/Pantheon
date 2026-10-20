@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/ZachariahAyers/Pantheon/actions/workflows/ci.yml/badge.svg)](https://github.com/ZachariahAyers/Pantheon/actions/workflows/ci.yml)
 
-An AutoCAD add-in that lets steel building drafters draw framing members straight from the engineer's numbers.
+A free AutoCAD add-in that lets steel building drafters draw framing members straight from the engineer's numbers.
 
-[Try the workframe geometry in your browser](https://ayers.repair/opensource/pantheon/). The demo runs the real Pantheon.Core .NET library in WebAssembly and produces no drawing file.
+[Try a workframe in your browser](https://ayers.repair/opensource/pantheon/). The demo runs the real Pantheon.Core .NET library in WebAssembly and downloads the frame as a DXF drawing.
 
 ## Features
 
@@ -19,24 +19,21 @@ An AutoCAD add-in that lets steel building drafters draw framing members straigh
 
 VB.NET, .NET 10, AutoCAD 2027 .NET API, WinForms, xUnit.
 
-## Getting started
+## Install
 
-Requires AutoCAD 2027 and the .NET 10 SDK on Windows.
-
-```bash
-git clone https://github.com/ZachariahAyers/Pantheon.git
-cd Pantheon
-dotnet build Pantheon.slnx -c Release
-```
-
-In AutoCAD, run `NETLOAD` and pick `src/Pantheon.AutoCAD/bin/Release/net10.0-windows/Pantheon.dll`, then run `PANTHEON`.
+Pantheon is free on the Autodesk App Store for AutoCAD 2027 on 64-bit Windows. The Pantheon tab appears on the ribbon when AutoCAD starts.
 
 ## Development
+
+Requires the .NET 10 SDK. The add-in compiles on any OS; only AutoCAD 2027 on Windows runs it.
 
 ```bash
 dotnet build Pantheon.slnx -c Release
 dotnet test Pantheon.slnx -c Release
+node --test tests/*.test.mjs
 ```
+
+To try a change in AutoCAD, run `NETLOAD` and pick `src/Pantheon.AutoCAD/bin/Release/net10.0-windows/Pantheon.dll`. A Release build also writes `Pantheon.bundle.zip`, the App Store package.
 
 How it is put together: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 

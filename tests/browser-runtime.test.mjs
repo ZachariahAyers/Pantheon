@@ -4,6 +4,7 @@ import { loadGenerator } from "../src/Pantheon.Browser/wwwroot/runtime.js";
 
 test("keeps the exported adapter alive without running the empty Main", async () => {
     const generate = () => "result";
+    const dxf = () => "drawing";
     let exits = 0;
     const dotnet = {
         run: () => {
@@ -17,7 +18,7 @@ test("keeps the exported adapter alive without running the empty Main", async ()
                 getConfig: () => ({ mainAssemblyName: "Pantheon.Browser" }),
                 getAssemblyExports: async (assembly) => {
                     assert.equal(assembly, "Pantheon.Browser");
-                    return { Pantheon: { Browser: { BrowserAdapter: { Generate: generate } } } };
+                    return { Pantheon: { Browser: { BrowserAdapter: { Generate: generate, Dxf: dxf } } } };
                 },
                 run: () => {
                     exits += 1;
@@ -29,6 +30,6 @@ test("keeps the exported adapter alive without running the empty Main", async ()
         },
     };
 
-    assert.equal(await loadGenerator(dotnet), generate);
+    assert.deepEqual(await loadGenerator(dotnet), { generate, dxf });
     assert.equal(exits, 0);
 });

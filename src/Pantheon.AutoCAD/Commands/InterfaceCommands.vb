@@ -11,7 +11,7 @@ Namespace Commands
 
         <CommandMethod("PANTHEON")>
         Public Shared Sub ShowPantheon()
-            If Not PantheonRibbon.Show() Then
+            If Not PantheonRibbon.Show(activate:=True) Then
                 DrawingTarget.Active()?.Message("The ribbon is off. Turn it on with the RIBBON command, then run PANTHEON again.")
             End If
             PantheonPalettes.Show()
@@ -20,6 +20,11 @@ Namespace Commands
         <CommandMethod("PANTHEONPALETTE")>
         Public Shared Sub ShowPalettes()
             PantheonPalettes.Show()
+        End Sub
+
+        <CommandMethod("PANTHEONABOUT")>
+        Public Shared Sub ShowAbout()
+            AboutBox.Show()
         End Sub
 
     End Class

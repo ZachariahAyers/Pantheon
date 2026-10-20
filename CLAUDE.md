@@ -7,13 +7,15 @@ AutoCAD 2027 add-in in VB.NET on .NET 10. It draws metal building framing (workf
 - Build: `dotnet build Pantheon.slnx -c Release`
 - Test: `dotnet test Pantheon.slnx -c Release`
 - Core tests alone (any OS): `dotnet test tests/Pantheon.Core.Tests`
-- The add-in builds only on Windows (`net10.0-windows`). Nothing here runs AutoCAD: check a drawing change by NETLOAD of `src/Pantheon.AutoCAD/bin/Release/net10.0-windows/Pantheon.dll` in AutoCAD 2027.
+- Page and ribbon command lists: `node --test tests/*.test.mjs`
+- The add-in compiles on any OS (`net10.0-windows` with Windows targeting enabled); a Release build also writes `Pantheon.bundle.zip` for the Autodesk App Store. Nothing here runs AutoCAD: check a drawing change by NETLOAD of `src/Pantheon.AutoCAD/bin/Release/net10.0-windows/Pantheon.dll` in AutoCAD 2027.
 
 ## Architecture
 
 - `src/Pantheon.Core`: all geometry. No AutoCAD, no UI. A new calculation goes here, with a test.
 - `src/Pantheon.AutoCAD`: commands, ribbon, palettes, dialogs, database writes. No geometry math.
 - `src/Pantheon.AutoCAD/Ui/Members/MemberCatalog.vb`: every member type's dialog fields and how they build a Core model.
+- A new command gets a ribbon button in `Ui/PantheonRibbon.vb` and a line on the demo page (`src/Pantheon.Browser/wwwroot/index.html`); the node test fails otherwise.
 - `tests/Pantheon.Core.Tests`: xUnit v3.
 - Details and coordinate conventions: `docs/ARCHITECTURE.md`.
 

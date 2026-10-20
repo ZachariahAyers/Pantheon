@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ApplicationPackage SchemaVersion="1.0"
+                    AutodeskProduct="AutoCAD"
+                    Name="Pantheon"
+                    AppVersion="2.0.0"
+                    Description="Free AutoCAD add-in that draws metal building framing from the engineer's numbers: workframes, slabs, base plates, girts, purlins and eave struts."
+                    Author="Ayers Electronics"
+                    HelpFile="./Contents/Help/Pantheon.html"
+                    OnlineDocumentation="https://ayers.repair/opensource/pantheon/"
+                    ProductType="Application"
+                    SupportedLocales="Enu"
+                    ProductCode="{9729726C-F6F9-4D15-9645-D49655C2F570}"
+                    UpgradeCode="{C0B50F34-FEA1-457D-ACC6-146CC46D204D}">
+
+  <CompanyDetails Name="Ayers Electronics"
+                  Url="https://ayers.repair/"
+                  Email="support@ayers.repair" />
+
+  <Components Description="Pantheon for AutoCAD 2027 (net10)">
+    <RuntimeRequirements OS="Win64"
+                         Platform="AutoCAD*"
+                         SeriesMin="R26.0"
+                         SeriesMax="R26.0" />
+    <ComponentEntry AppName="Pantheon"
+                    AppDescription="Pantheon for AutoCAD 2027"
+                    Version="2.0.0"
+                    AppType=".NET"
+                    ModuleName="./Contents/net10.0-windows/Pantheon.dll"
+                    LoadOnAutoCADStartup="True" />
+  </Components>
+
+</ApplicationPackage>
