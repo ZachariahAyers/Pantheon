@@ -21,7 +21,7 @@ VB.NET, .NET 10, AutoCAD 2027 .NET API, WinForms, xUnit.
 
 ## Install
 
-Pantheon is free on the Autodesk App Store for AutoCAD 2027 on 64-bit Windows. The Pantheon tab appears on the ribbon when AutoCAD starts.
+Pantheon is coming free to the Autodesk App Store, for AutoCAD 2027 on 64-bit Windows. Once installed, the Pantheon tab appears on the ribbon when AutoCAD starts.
 
 ## Development
 
